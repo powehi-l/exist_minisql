@@ -28,6 +28,8 @@ public:
 
   bool DeletePage(page_id_t page_id);
 
+  void FlushAllPages();
+
   bool IsPageFree(page_id_t page_id);
 
   bool CheckAllUnpinned();
