@@ -29,9 +29,9 @@ Column::Column(const Column *other) : name_(other->name_), type_(other->type_), 
 uint32_t Column::SerializeTo(char *buf) const {
   // replace with your code here
     char *newbuf = buf;
-//    //magic_number
-//    memcpy(newbuf, &COLUMN_MAGIC_NUM, sizeof(uint32_t));
-//    newbuf += sizeof(uint32_t);
+    //magic_number
+    memcpy(newbuf, &COLUMN_MAGIC_NUM, sizeof(uint32_t));
+    newbuf += sizeof(uint32_t);
     //name_
     uint32_t name_len = name_.length();
     memcpy(newbuf, &name_len, sizeof(uint32_t));
@@ -69,9 +69,9 @@ uint32_t Column::GetSerializedSize() const {
 uint32_t Column::DeserializeFrom(char *buf, Column *&column, MemHeap *heap) {
   // replace with your code here
     char *newbuf = buf;
-//    //magic_num
+    //magic_num
 //    uint32_t magic_num = MACH_READ_UINT32(newbuf);
-//    newbuf += sizeof(uint32_t);
+    newbuf += sizeof(uint32_t);
     //column_name
     uint32_t name_len = MACH_READ_UINT32(newbuf);
     newbuf += sizeof(uint32_t);
