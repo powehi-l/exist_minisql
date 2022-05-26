@@ -25,11 +25,11 @@ public:
   uint32_t GetSerializedSize() const;
 
   inline table_id_t GetNextTableId() const {
-    return table_meta_pages_.size() == 0 ? 0 : table_meta_pages_.rbegin()->first + 1;
+    return table_meta_pages_.size() == 0 ? 0 : table_meta_pages_.rbegin()->first;
   }
 
   inline index_id_t GetNextIndexId() const {
-    return index_meta_pages_.size() == 0 ? 0 : index_meta_pages_.rbegin()->first + 1;
+    return index_meta_pages_.size() == 0 ? 0 : index_meta_pages_.rbegin()->first;
   }
 
   static CatalogMeta *NewInstance(MemHeap *heap) {

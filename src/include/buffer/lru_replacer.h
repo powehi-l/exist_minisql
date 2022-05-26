@@ -4,6 +4,8 @@
 #include <list>
 #include <mutex>
 #include <unordered_set>
+/**增加unordered_map对应库*/
+#include <unordered_map>
 #include <vector>
 
 #include "buffer/replacer.h"
@@ -36,7 +38,16 @@ public:
   size_t Size() override;
 
 private:
-  // add your own private member variables here
+//  // add your own private member variables here
+ using ListIterator = typename std::list<frame_id_t>::const_iterator;
+ /** number of pages in buffer pool */
+ size_t _num_pages;
+ /** lrulist */
+ std::list<frame_id_t> lrulist;
+ /** lrumap */
+ //std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> lrumap;
+ std::unordered_map<frame_id_t,ListIterator> lrumap;
+
 };
 
 #endif  // MINISQL_LRU_REPLACER_H
