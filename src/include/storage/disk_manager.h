@@ -1,6 +1,7 @@
 #ifndef DISK_MGR_H
 #define DISK_MGR_H
 
+#include <list>
 #include <atomic>
 #include <fstream>
 #include <iostream>
