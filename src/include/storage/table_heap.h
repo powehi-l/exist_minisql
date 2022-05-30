@@ -48,7 +48,7 @@ public:
    * @param[in] txn Transaction performing the update
    * @return true is update is successful.
    */
-  bool UpdateTuple(const Row &row, const RowId &rid, Transaction *txn);
+  bool UpdateTuple(Row &row, const RowId &rid, Transaction *txn);
 
   /**
    * Called on Commit/Abort to actually delete a tuple or rollback an insert.
@@ -102,7 +102,9 @@ private:
           schema_(schema),
           log_manager_(log_manager),
           lock_manager_(lock_manager) {
-    ASSERT(false, "Not implemented yet.");
+      TablePage *first_page = (TablePage *)buffer_pool_manager_->NewPage(first_page_id_);
+      first_page->Init(first_page_id_,INVALID_PAGE_ID,log_manager, txn);
+      buffer_pool_manager_->UnpinPage(first_page_id_, true);
   };
 
   /**
