@@ -4,7 +4,7 @@ uint32_t Schema::SerializeTo(char *buf) const {
   // replace with your code here
     char *newbuf = buf;
     for (auto column : columns_)
-        column->SerializeTo(newbuf);
+        newbuf += column->SerializeTo(newbuf);
     return newbuf - buf;
 }
 
