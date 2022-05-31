@@ -4,31 +4,31 @@ bool TableHeap::InsertTuple(Row &row, Transaction *txn) {
     if (row.GetSerializedSize(schema_) > TablePage::SIZE_MAX_ROW)
         return false;
     page_id_t item_page_id = first_page_id_;
-    TablePage *item_page = (TablePage *)buffer_pool_manager_->FetchPage(item_page_id);
-    buffer_pool_manager_->UnpinPage(item_page_id, false);
+    TablePage *item_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(item_page_id));
+//    buffer_pool_manager_->UnpinPage(item_page_id, false);
     while (true) {
         bool flag = item_page->InsertTuple(row, schema_, txn, lock_manager_, log_manager_);
         if(flag){
-            buffer_pool_manager_->UnpinPage(item_page_id, true);
+//            buffer_pool_manager_->UnpinPage(item_page_id, true);
             return true;
         }
         if (item_page->GetNextPageId() == INVALID_PAGE_ID)
             break;
         item_page_id = item_page->GetNextPageId();
-        item_page = (TablePage *)buffer_pool_manager_->FetchPage(item_page_id);
-        buffer_pool_manager_->UnpinPage(item_page_id, false);
+        item_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(item_page_id));
+//        buffer_pool_manager_->UnpinPage(item_page_id, false);
     }
-    buffer_pool_manager_->UnpinPage(item_page_id, true);
+//    buffer_pool_manager_->UnpinPage(item_page_id, true);
     page_id_t new_page_id = INVALID_PAGE_ID;
-    TablePage *new_page = (TablePage *)buffer_pool_manager_->NewPage(new_page_id);
-    buffer_pool_manager_->UnpinPage(new_page_id,false);
+    TablePage *new_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(new_page_id));
+//    buffer_pool_manager_->UnpinPage(new_page_id,false);
     if (!new_page)
         return false;
     new_page->Init(new_page_id, item_page_id, log_manager_, txn);
     new_page->InsertTuple(row, schema_, txn, lock_manager_, log_manager_);
-    buffer_pool_manager_->UnpinPage(new_page_id,true);
+//    buffer_pool_manager_->UnpinPage(new_page_id,true);
     item_page->SetNextPageId(new_page_id);
-    buffer_pool_manager_->UnpinPage(item_page_id,true);
+//    buffer_pool_manager_->UnpinPage(item_page_id,true);
     return true;
 }
 
