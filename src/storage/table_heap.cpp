@@ -48,7 +48,7 @@ bool TableHeap::MarkDelete(const RowId &rid, Transaction *txn) {
 }
 
 bool TableHeap::UpdateTuple(Row &row, const RowId &rid, Transaction *txn) {
-    TablePage *page = (TablePage *)buffer_pool_manager_->FetchPage(rid.GetPageId());
+    TablePage *page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
     if(page == nullptr)
         return false;
     buffer_pool_manager_->UnpinPage(page->GetTablePageId(), false);
@@ -69,7 +69,7 @@ bool TableHeap::UpdateTuple(Row &row, const RowId &rid, Transaction *txn) {
 void TableHeap::ApplyDelete(const RowId &rid, Transaction *txn) {
   // Step1: Find the page which contains the tuple.
   // Step2: Delete the tuple from the page.
-    TablePage *page = (TablePage *)buffer_pool_manager_->FetchPage(rid.GetPageId());
+    TablePage *page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
     page->ApplyDelete(rid, txn, log_manager_);
     buffer_pool_manager_->UnpinPage(page->GetTablePageId(),true);
 }
@@ -86,11 +86,11 @@ void TableHeap::RollbackDelete(const RowId &rid, Transaction *txn) {
 }
 
 void TableHeap::FreeHeap() {
-    TablePage *item_page = (TablePage *)buffer_pool_manager_->FetchPage(first_page_id_);
+    TablePage *item_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(first_page_id_));
     page_id_t next_page_id = item_page->GetNextPageId();
     buffer_pool_manager_->DeletePage(item_page->GetPageId());
     while(next_page_id != INVALID_PAGE_ID){
-        item_page = (TablePage *)buffer_pool_manager_->FetchPage(next_page_id);
+        item_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(next_page_id));
         next_page_id = item_page->GetNextPageId();
         buffer_pool_manager_->DeletePage(item_page->GetPageId());
     }
@@ -98,7 +98,7 @@ void TableHeap::FreeHeap() {
 }
 
 bool TableHeap::GetTuple(Row *row, Transaction *txn) {
-    TablePage *tpage = (TablePage *)buffer_pool_manager_->FetchPage(row->GetRowId().GetPageId());
+    TablePage *tpage = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(row->GetRowId().GetPageId()));
     if(!tpage)
         return false;
     else{
@@ -113,7 +113,7 @@ TableIterator TableHeap::Begin(Transaction *txn) {
     RowId rid;
     page_id_t page_id = first_page_id_;
     while(page_id != INVALID_PAGE_ID){
-        TablePage * page = (TablePage *)buffer_pool_manager_->FetchPage(page_id);
+        TablePage * page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(page_id));
         bool flag = page->GetFirstTupleRid(&rid);
         buffer_pool_manager_->UnpinPage(page_id, false);
         if(flag)
