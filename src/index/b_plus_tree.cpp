@@ -220,10 +220,19 @@ void BPLUSTREE_TYPE::Remove(const KeyType &key, Transaction *transaction) {
     ASSERT(false, "fail to fetch parent page");
   auto* parent_node = reinterpret_cast<InternalPage *>(parent_page->GetData());
   parent_node->SetKeyAt(parent_node->ValueIndex(leaf_page->GetPageId()), leaf_page->KeyAt(0));
+  while(!parent_node->IsRootPage()){
+    auto* cur_node = parent_node;
+    parent_page = buffer_pool_manager_->FetchPage(parent_node->GetParentPageId());
+    parent_node = reinterpret_cast<InternalPage *>(parent_page->GetData());
+    parent_node->SetKeyAt(parent_node->ValueIndex(cur_node->GetPageId()), cur_node->KeyAt(0));
+    buffer_pool_manager_->UnpinPage(cur_node->GetPageId(), true);
+  }
+  buffer_pool_manager_->UnpinPage(parent_page->GetPageId(), true);
+
   if(cur_size < leaf_page->GetMinSize())
     CoalesceOrRedistribute(leaf_page, transaction);
+
   buffer_pool_manager_->UnpinPage(leaf_page->GetPageId(), true);
-  buffer_pool_manager_->UnpinPage(parent_page->GetPageId(), true);
 }
 
 /*
@@ -291,6 +300,7 @@ bool BPLUSTREE_TYPE::Coalesce(N **neighbor_node, N **node,
     if((*parent)->GetSize() < (*parent)->GetMinSize()){
       return CoalesceOrRedistribute<InternalPage>(*parent, transaction);
     }
+
     return false;
 }
 

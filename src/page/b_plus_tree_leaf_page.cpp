@@ -165,7 +165,6 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *recipient, const K
   int start = recipient->GetSize();
   for(int i = 0; i < GetSize(); i++)
     recipient->array_[i + start] = array_[i];
-  recipient->array_[start].first = middle_key;
 
   recipient->SetNextPageId(GetNextPageId());
   recipient->IncreaseSize(GetSize());
