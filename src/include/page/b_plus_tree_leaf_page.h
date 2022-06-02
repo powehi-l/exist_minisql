@@ -56,13 +56,15 @@ public:
   int RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator);
 
   // Split and Merge utility methods
-  void MoveHalfTo(BPlusTreeLeafPage *recipient);
+  void MoveHalfTo(BPlusTreeLeafPage *recipient, BufferPoolManager *buffer_pool_manager);
 
-  void MoveAllTo(BPlusTreeLeafPage *recipient);
+  void MoveAllTo(BPlusTreeLeafPage *recipient, const KeyType &middle_key, BufferPoolManager *buffer_pool_manager);
 
-  void MoveFirstToEndOf(BPlusTreeLeafPage *recipient);
+  void MoveFirstToEndOf(BPlusTreeLeafPage *recipient, const KeyType &middle_key,
+                        BufferPoolManager *buffer_pool_manager);
 
-  void MoveLastToFrontOf(BPlusTreeLeafPage *recipient);
+  void MoveLastToFrontOf(BPlusTreeLeafPage *recipient, const KeyType &middle_key,
+                         BufferPoolManager *buffer_pool_manager);
 
 private:
   void CopyNFrom(MappingType *items, int size);
@@ -72,7 +74,7 @@ private:
   void CopyFirstFrom(const MappingType &item);
 
   page_id_t next_page_id_;
-  MappingType array_[0];
+  MappingType array_[LEAF_PAGE_SIZE];
 };
 
 #endif  // MINISQL_B_PLUS_TREE_LEAF_PAGE_H
