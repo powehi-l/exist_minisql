@@ -54,7 +54,7 @@ int B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueIndex(const ValueType &value) const {
 INDEX_TEMPLATE_ARGUMENTS
 ValueType B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const {
   // replace with your own code
-  assert(0 <= index && index < GetSize());
+//  assert(0 <= index && index < GetSize());
   return array_[index].second;
 }
 
@@ -69,11 +69,26 @@ ValueType B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const {
 INDEX_TEMPLATE_ARGUMENTS
 ValueType B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(const KeyType &key, const KeyComparator &comparator) const {
   // replace with your own code
-  for(int i = 1; i < GetSize(); i++){
-    if(comparator(key,array_[i].first) < 0)
-      return array_[i-1].second;
+//  for(int i = 1; i < GetSize(); i++){
+//    if(comparator(key,array_[i].first) < 0)
+//      return array_[i-1].second;
+//  }
+//  return array_[GetSize()-1].second;
+  int start = 1;
+  int end = GetSize() - 1;
+
+  // find the first key > key
+  while (start <= end) {
+    int mid = (end - start) / 2 + start;
+    if (comparator(array_[mid].first, key) <= 0) {
+      start = mid + 1;
+    } else {
+      end = mid - 1;
+    }
   }
-  return array_[GetSize()-1].second;
+
+  // the last <= key
+  return array_[start - 1].second;
 }
 
 /*****************************************************************************
@@ -258,7 +273,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveLastToFrontOf(BPlusTreeInternalPage *re
                                                        BufferPoolManager *buffer_pool_manager) {
   recipient->CopyFirstFrom(array_[GetSize()-1], buffer_pool_manager);
   IncreaseSize(-1);
-  recipient->SetKeyAt(0, middle_key);
+//  recipient->SetKeyAt(0, middle_key);
 }
 
 /* Append an entry at the beginning.
