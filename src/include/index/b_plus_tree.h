@@ -53,6 +53,8 @@ public:
   // expose for test purpose
   Page *FindLeafPage(const KeyType &key, bool leftMost = false);
 
+  Page *FindLeafPage(bool leftMost);
+
   // used to check whether all pages are unpinned
   bool Check();
 
