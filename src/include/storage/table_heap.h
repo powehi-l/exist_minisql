@@ -104,7 +104,7 @@ private:
           lock_manager_(lock_manager) {
       TablePage *first_page = (TablePage *)buffer_pool_manager_->NewPage(first_page_id_);
       first_page->Init(first_page_id_,INVALID_PAGE_ID,log_manager, txn);
-      buffer_pool_manager_->UnpinPage(first_page_id_, true);
+//      buffer_pool_manager_->UnpinPage(first_page_id_, true);
   };
 
   /**
