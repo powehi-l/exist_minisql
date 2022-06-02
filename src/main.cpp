@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     begin = clock();
     engine.Execute(MinisqlGetParserRootNode(), &context);
     end = clock();
-    std::cout << "Cost Time : " << double(end - begin) / CLOCKS_PER_SEC << "s" << endl;
+    std::cout << " (" << double(end - begin) / CLOCKS_PER_SEC << " sec)" << endl;
     sleep(1);
 
     // clean memory after parse
