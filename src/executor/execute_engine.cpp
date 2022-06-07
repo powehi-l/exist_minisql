@@ -220,6 +220,7 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
             current_db->catalog_mgr_->CreateIndex(new_table_name,unique_index_name,unique_column_name,nullptr,index_info);
         }
     }
+    cout << "Success!";
     return create_table;
 //  return DB_FAILED;
 }
@@ -228,7 +229,11 @@ dberr_t ExecuteEngine::ExecuteDropTable(pSyntaxNode ast, ExecuteContext *context
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteDropTable" << std::endl;
 #endif
-  return DB_FAILED;
+    dberr_t drop_table = current_db->catalog_mgr_->DropTable(ast->child_->val_);
+    if(drop_table == DB_TABLE_NOT_EXIST)
+        cout << "Error : Table Not Exist!";
+    return drop_table;
+    //return DB_FAILED;
 }
 
 dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *context) {
