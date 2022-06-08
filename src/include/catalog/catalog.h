@@ -18,6 +18,8 @@ class CatalogMeta {
   friend class CatalogManager;
 
 public:
+  //CatalogMeta(std::map<table_id_t, page_id_t> table_meta_pages, std::map<index_id_t, page_id_t> index_meta_pages) ;
+
   void SerializeTo(char *buf) const;
 
   static CatalogMeta *DeserializeFrom(char *buf, MemHeap *heap);
@@ -99,18 +101,18 @@ private:
   dberr_t GetTable(const table_id_t table_id, TableInfo *&table_info);
 
 private:
-  [[maybe_unused]] BufferPoolManager *buffer_pool_manager_;
-  [[maybe_unused]] LockManager *lock_manager_;
-  [[maybe_unused]] LogManager *log_manager_;
+  [[maybe_unused]] BufferPoolManager *buffer_pool_manager_; //1
+  [[maybe_unused]] LockManager *lock_manager_; //1
+  [[maybe_unused]] LogManager *log_manager_; //1
   [[maybe_unused]] CatalogMeta *catalog_meta_;
-  [[maybe_unused]] std::atomic<table_id_t> next_table_id_;
-  [[maybe_unused]] std::atomic<index_id_t> next_index_id_;
+  [[maybe_unused]] std::atomic<table_id_t> next_table_id_; //1
+  [[maybe_unused]] std::atomic<index_id_t> next_index_id_; //1
   // map for tables
-  std::unordered_map<std::string, table_id_t> table_names_;
-  std::unordered_map<table_id_t, TableInfo *> tables_;
+  std::unordered_map<std::string, table_id_t> table_names_; //1
+  std::unordered_map<table_id_t, TableInfo *> tables_; //1
   // map for indexes: table_name->index_name->indexes
-  [[maybe_unused]] std::unordered_map<std::string, std::unordered_map<std::string, index_id_t>> index_names_;
-  [[maybe_unused]] std::unordered_map<index_id_t, IndexInfo *> indexes_;
+  [[maybe_unused]] std::unordered_map<std::string, std::unordered_map<std::string, index_id_t>> index_names_; //1
+  [[maybe_unused]] std::unordered_map<index_id_t, IndexInfo *> indexes_; //1
   // memory heap
   MemHeap *heap_;
 };

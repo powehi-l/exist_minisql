@@ -24,7 +24,7 @@ public:
     bpm_ = new BufferPoolManager(buffer_pool_size, disk_mgr_);
     catalog_mgr_ = new CatalogManager(bpm_, nullptr, nullptr, init);
     // Allocate static page for db storage engine
-    if (init) {
+    if (init) {//起来看这块的代码，关闭一个db然后新建一个db，load内容该如何读取？DPM的作用是？（ispagefree/...)的作用？
       page_id_t id;
       ASSERT(bpm_->IsPageFree(CATALOG_META_PAGE_ID), "Catalog meta page not free.");
       ASSERT(bpm_->IsPageFree(INDEX_ROOTS_PAGE_ID), "Header page not free.");

@@ -34,6 +34,6 @@ void LRUReplacer::Unpin(frame_id_t frame_id) {
 }
 
 size_t LRUReplacer::Size() {
-  //return 0;
+  /**返回lrumap的大小作为现在的size*/
   return lrumap.size();
 }

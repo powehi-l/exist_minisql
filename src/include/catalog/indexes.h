@@ -62,9 +62,14 @@ public:
 
   void Init(IndexMetadata *meta_data, TableInfo *table_info, BufferPoolManager *buffer_pool_manager) {
     // Step1: init index metadata and table info
+    meta_data_ = meta_data;
+    table_info_ = table_info;
     // Step2: mapping index key to key schema
+    key_schema_ = Schema::ShallowCopySchema(table_info->GetSchema(),meta_data_->GetKeyMapping(),
+                                            table_info->GetMemHeap());
     // Step3: call CreateIndex to create the index
-    ASSERT(false, "Not Implemented yet.");
+    index_ = CreateIndex(buffer_pool_manager);
+    //ASSERT(false, "Not Implemented yet.");
   }
 
   inline Index *GetIndex() { return index_; }
@@ -82,6 +87,17 @@ private:
                          key_schema_{nullptr}, heap_(new SimpleMemHeap()) {}
 
   Index *CreateIndex(BufferPoolManager *buffer_pool_manager) {
+   // BufferPoolManager *newbuf=buffer_pool_manager;
+    // Index *index_t = new Index(meta_data_->index_id_,key_schema_);
+    // tag:undetermined
+//   //int
+//   switch(key_schema_->GetColumn(1)->GetType()){
+     //auto b_plustree_index = new BPlusTreeIndex<GenericKey<4>,RowId,GenericComparator<4>>(meta_data_->index_id_,key_schema_,buffer_pool_manager);
+//   }
+
+//    return b_plustree_index;
+   //buffer_pool_manager.
+   //Index *index = CreateIndex(buffer_pool_manager);
     ASSERT(false, "Not Implemented yet.");
     return nullptr;
   }
