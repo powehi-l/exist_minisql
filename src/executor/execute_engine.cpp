@@ -168,13 +168,12 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
         else if(new_column_type == "float")
             new_column = new Column(new_column_name, kTypeFloat, index, true, is_unique);
         else if(new_column_type == "char"){
-            string len = pointer->child_->next_->child_->val_;
-            double l = stod(len);
+            float l = atof(pointer->child_->next_->child_->val_);
             if (l <= 0){
                 cout << "Error : String length can't be negative!";
                 return DB_FAILED;
             }
-            if (l - (double)((int)l) >= 1e-6) {
+            if (l - (float)((int)l) >= 1e-6) {
                 cout << "Error : String length can't be decimal!";
                 return DB_FAILED;
             }
@@ -211,15 +210,15 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
         string primary_key_index_name = new_table_name + "_primary_key";
         current_db->catalog_mgr_->CreateIndex(new_table_name, primary_key_index_name, primary_keys, nullptr, index_info);
     }
-    //unique index
-    for (auto & iterator : new_table_column){
-        if (iterator->IsUnique()){
-            string unique_index_name = new_table_name + "_" + iterator->GetName() + "_unique";
-            vector<string> unique_column_name = { iterator->GetName() };
-            IndexInfo *index_info = nullptr;
-            current_db->catalog_mgr_->CreateIndex(new_table_name,unique_index_name,unique_column_name,nullptr,index_info);
-        }
-    }
+//    //unique index
+//    for (auto & iterator : new_table_column){
+//        if (iterator->IsUnique()){
+//            string unique_index_name = new_table_name + "_" + iterator->GetName() + "_unique";
+//            vector<string> unique_column_name = { iterator->GetName() };
+//            IndexInfo *index_info = nullptr;
+//            current_db->catalog_mgr_->CreateIndex(new_table_name,unique_index_name,unique_column_name,nullptr,index_info);
+//        }
+//    }
     cout << "Success!";
     return create_table;
 //  return DB_FAILED;
@@ -268,6 +267,100 @@ dberr_t ExecuteEngine::ExecuteInsert(pSyntaxNode ast, ExecuteContext *context) {
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteInsert" << std::endl;
 #endif
+    pSyntaxNode pointer = ast->child_;
+    string table_name = pointer->val_;
+    TableInfo* table_info = nullptr;
+    dberr_t get_table = current_db->catalog_mgr_->GetTable(table_name, table_info);
+    if (get_table == DB_TABLE_NOT_EXIST){
+        cout << "Error : Table not exist! Affects 0 record!";
+        return DB_FAILED;
+    }
+    vector<Field> new_fields;
+    pointer = pointer->next_->child_;
+    int index = table_info->GetSchema()->GetColumnCount();
+    for (auto i = 0; i < index; i++){
+        TypeId index_type = table_info->GetSchema()->GetColumn(i)->GetType();
+        if(pointer->val_ == nullptr){
+            Field new_field(index_type);
+            new_fields.push_back(new_field);
+            pointer = pointer->next_;
+            continue;
+        }
+//        if (pointer == nullptr){
+//            for (auto j = i; j < index; j++){
+//                Field new_field(table_info->GetSchema()->GetColumn(j)->GetType());
+//                fields.push_back(new_field);
+//            }
+//            break;
+//        }
+        if (index_type == kTypeInt){
+            int int_value = atoi(pointer->val_);
+            Field new_field (kTypeInt, int_value);
+            new_fields.push_back(new_field);
+        }
+        else if(index_type==kTypeFloat){
+            float float_value = atof(pointer->val_);
+            Field new_field (kTypeFloat, float_value);
+            new_fields.push_back(new_field);
+        }
+        else {
+            char *char_value = new char[strlen(pointer->val_) + 1];
+            strcpy(char_value, pointer->val_);
+            Field new_field (kTypeChar, char_value, strlen(pointer->val_), true);
+            new_fields.push_back(new_field);
+        }
+        pointer = pointer->next_;
+    }
+//    if (pointer != nullptr){
+//        cout << "Error : Column Count doesn't match!";
+//        return DB_FAILED;
+//    }
+    Row new_row(new_fields);
+    TableHeap* table_heap = table_info->GetTableHeap();
+    bool insert = table_heap->InsertTuple(new_row,nullptr);
+    if(!insert){
+        cout<<"Error : Insert failed! Affects 0 record!"<<endl;
+        return DB_FAILED;
+    }
+//    vector<IndexInfo*> indexes;
+//    current_db->catalog_mgr_->GetTableIndexes(table_name, indexes);
+//    for(auto iter = indexes.begin(); iter != indexes.end(); iter++){
+//        IndexSchema* index_schema = (*iter)->GetIndexKeySchema();
+//        vector<Field> index_fields;
+//        for(auto it:index_schema->GetColumns()){
+//            index_id_t tmp;
+//            if(tableinfo->GetSchema()->GetColumnIndex(it->GetName(),tmp)==DB_SUCCESS){
+//                index_fields.push_back(fields[tmp]);
+//            }
+//        }
+//        Row index_row(index_fields);
+//        dberr_t IsInsert=(*iter)->GetIndex()->InsertEntry(index_row,row.GetRowId(),nullptr);
+//        //cout<<"RowID: "<<row.GetRowId().Get()<<endl;
+//        if(IsInsert==DB_FAILED){
+//            //插入失败
+//            cout<<"Insert Failed, Affects 0 Record!"<<endl;
+//            //把前面插入过的全都撤销掉
+//            for(auto q=indexes.begin();q!=iter;q++){
+//                IndexSchema* index_schema_already = (*q)->GetIndexKeySchema();
+//                vector<Field> index_fields_already;
+//                for(auto it:index_schema_already->GetColumns()){
+//                    index_id_t tmp_already;
+//                    if(tableinfo->GetSchema()->GetColumnIndex(it->GetName(),tmp_already)==DB_SUCCESS){
+//                        index_fields_already.push_back(fields[tmp_already]);
+//                    }
+//                }
+//                Row index_row_already(index_fields_already);
+//                (*q)->GetIndex()->RemoveEntry(index_row_already,row.GetRowId(),nullptr);
+//            }
+//            tableheap->MarkDelete(row.GetRowId(),nullptr);
+//            return IsInsert;
+//        }else{
+//            //cout<<"Insert Into Index Sccess"<<endl;
+//        }
+//    }
+//    //ȫ�����ܲ��ȥ���ܳɹ�����???
+//    cout<<"Insert Success, Affects 1 Record!"<<endl;
+//    return DB_SUCCESS;
   return DB_FAILED;
 }
 
