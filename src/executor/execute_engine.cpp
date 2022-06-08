@@ -322,45 +322,11 @@ dberr_t ExecuteEngine::ExecuteInsert(pSyntaxNode ast, ExecuteContext *context) {
         cout<<"Error : Insert failed! Affects 0 record!"<<endl;
         return DB_FAILED;
     }
-//    vector<IndexInfo*> indexes;
-//    current_db->catalog_mgr_->GetTableIndexes(table_name, indexes);
-//    for(auto iter = indexes.begin(); iter != indexes.end(); iter++){
-//        IndexSchema* index_schema = (*iter)->GetIndexKeySchema();
-//        vector<Field> index_fields;
-//        for(auto it:index_schema->GetColumns()){
-//            index_id_t tmp;
-//            if(tableinfo->GetSchema()->GetColumnIndex(it->GetName(),tmp)==DB_SUCCESS){
-//                index_fields.push_back(fields[tmp]);
-//            }
-//        }
-//        Row index_row(index_fields);
-//        dberr_t IsInsert=(*iter)->GetIndex()->InsertEntry(index_row,row.GetRowId(),nullptr);
-//        //cout<<"RowID: "<<row.GetRowId().Get()<<endl;
-//        if(IsInsert==DB_FAILED){
-//            //插入失败
-//            cout<<"Insert Failed, Affects 0 Record!"<<endl;
-//            //把前面插入过的全都撤销掉
-//            for(auto q=indexes.begin();q!=iter;q++){
-//                IndexSchema* index_schema_already = (*q)->GetIndexKeySchema();
-//                vector<Field> index_fields_already;
-//                for(auto it:index_schema_already->GetColumns()){
-//                    index_id_t tmp_already;
-//                    if(tableinfo->GetSchema()->GetColumnIndex(it->GetName(),tmp_already)==DB_SUCCESS){
-//                        index_fields_already.push_back(fields[tmp_already]);
-//                    }
-//                }
-//                Row index_row_already(index_fields_already);
-//                (*q)->GetIndex()->RemoveEntry(index_row_already,row.GetRowId(),nullptr);
-//            }
-//            tableheap->MarkDelete(row.GetRowId(),nullptr);
-//            return IsInsert;
-//        }else{
-//            //cout<<"Insert Into Index Sccess"<<endl;
-//        }
-//    }
-//    //ȫ�����ܲ��ȥ���ܳɹ�����???
-//    cout<<"Insert Success, Affects 1 Record!"<<endl;
-//    return DB_SUCCESS;
+    vector<IndexInfo *> indexes;
+    current_db->catalog_mgr_->GetTableIndexes(table_name, indexes);
+    for (auto iter = indexes.begin(); iter != indexes.end() ; iter++) {
+        //未完成
+    }
   return DB_FAILED;
 }
 
@@ -403,6 +369,7 @@ dberr_t ExecuteEngine::ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context)
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteExecfile" << std::endl;
 #endif
+
   return DB_FAILED;
 }
 
