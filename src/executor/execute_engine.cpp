@@ -58,12 +58,14 @@ dberr_t ExecuteEngine::ExecuteCreateDatabase(pSyntaxNode ast, ExecuteContext *co
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteCreateDatabase" << std::endl;
 #endif
+
     if (dbs_[ast->child_->val_]){
-        cout << "Can't create database '" << ast->child_->val_ << "'; database exists";
+        cout << "Error : Can't create database '" << ast->child_->val_ << "'; database exists";
         return DB_FAILED;
     }
-    DBStorageEngine *db = new DBStorageEngine(ast->child_->val_);
+    auto *db = new DBStorageEngine(ast->child_->val_, true);
     dbs_[ast->child_->val_] = db;
+    cout << "Success!";
     return DB_SUCCESS;
 //  return DB_FAILED;
 }
@@ -73,11 +75,12 @@ dberr_t ExecuteEngine::ExecuteDropDatabase(pSyntaxNode ast, ExecuteContext *cont
   LOG(INFO) << "ExecuteDropDatabase" << std::endl;
 #endif
     if (!dbs_[ast->child_->val_]){
-        cout << "Can't drop database '" << ast->child_->val_ << "'; database doesn't exist";
+        cout << "Error : Can't drop database '" << ast->child_->val_ << "'; database doesn't exist";
         return DB_FAILED;
     }
+    delete dbs_[ast->child_->val_];
     dbs_.erase(ast->child_->val_);
-//    delete dbs_[ast->child_->val_];
+    cout << "Success!";
     return DB_SUCCESS;
 //  return DB_FAILED;
 }
@@ -86,11 +89,15 @@ dberr_t ExecuteEngine::ExecuteShowDatabases(pSyntaxNode ast, ExecuteContext *con
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteShowDatabases" << std::endl;
 #endif
+    if (dbs_.empty()){
+        cout << "Empty!";
+        return DB_SUCCESS;
+    }
     cout << "+--------------------+" << endl;
     cout << " Database" << endl;
     cout << "+--------------------+" << endl;
-    for (auto db = dbs_.begin(); db != dbs_.end(); db++)
-        cout << " " << db->first << endl;
+    for (auto & db : dbs_)
+        cout << " " << db.first << endl;
     cout << "+--------------------+" << endl;
     return DB_SUCCESS;
 //  return DB_FAILED;
@@ -101,11 +108,12 @@ dberr_t ExecuteEngine::ExecuteUseDatabase(pSyntaxNode ast, ExecuteContext *conte
   LOG(INFO) << "ExecuteUseDatabase" << std::endl;
 #endif
     if (!dbs_[ast->child_->val_]){
-        cout << "Unknown database '" << ast->child_->val_ << "'";
+        cout << "Error : Unknown database '" << ast->child_->val_ << "'";
         return DB_FAILED;
     }
     current_db_ = ast->child_->val_;
     current_db = dbs_[current_db_];
+    cout << "Success!";
     return DB_SUCCESS;
 //  return DB_FAILED;
 }
@@ -115,14 +123,14 @@ dberr_t ExecuteEngine::ExecuteShowTables(pSyntaxNode ast, ExecuteContext *contex
   LOG(INFO) << "ExecuteShowTables" << std::endl;
 #endif
     if (!current_db) {
-        cout << "No database selected";
+        cout << "Error : No database selected";
         return DB_FAILED;
     }
     vector<TableInfo *> tables;
     current_db->catalog_mgr_->GetTables(tables);
     if (tables.empty()) {
         cout << "Empty set";
-        return DB_FAILED;
+        return DB_SUCCESS;
     }
     cout << "+--------------------+" << endl;
     cout << " Tables_in_" << current_db_ << endl;
@@ -138,14 +146,94 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteCreateTable" << std::endl;
 #endif
-  return DB_FAILED;
+    if (!current_db) {
+        cout << "Error : No database selected";
+        return DB_FAILED;
+    }
+    pSyntaxNode pointer = ast->child_;
+    string new_table_name = pointer->val_;
+    //put in ColumnDefinition[0]
+    pointer = pointer->next_->child_;
+    vector<Column *> new_table_column;
+    while(pointer != nullptr && pointer->type_ == kNodeColumnDefinition){
+        bool is_unique = false;
+        if ((string)pointer->val_ == "unique")
+            is_unique = true;
+        string new_column_name = pointer->child_->val_;
+        string new_column_type = pointer->child_->next_->val_;
+        int index = 0;
+        Column *new_column;
+        if(new_column_type == "int")
+            new_column = new Column(new_column_name, kTypeInt, index, true, is_unique);
+        else if(new_column_type == "float")
+            new_column = new Column(new_column_name, kTypeFloat, index, true, is_unique);
+        else if(new_column_type == "char"){
+            string len = pointer->child_->next_->child_->val_;
+            double l = stod(len);
+            if (l <= 0){
+                cout << "Error : String length can't be negative!";
+                return DB_FAILED;
+            }
+            if (l - (double)((int)l) >= 1e-6) {
+                cout << "Error : String length can't be decimal!";
+                return DB_FAILED;
+            }
+            auto length = (uint32_t)l;
+            new_column = new Column(new_column_name, kTypeChar, length, index, true, is_unique);
+        }
+        else{
+            cout<<"Error : Unknown column type!"<<endl;
+            return DB_FAILED;
+        }
+        new_table_column.push_back(new_column);
+        pointer = pointer->next_;
+        index++;
+    }
+    //schema
+    auto *new_schema = new Schema(new_table_column);
+    TableInfo *table_info = nullptr;
+    dberr_t create_table =
+            current_db->catalog_mgr_->CreateTable(new_table_name, new_schema,nullptr,table_info);
+    if(create_table == DB_TABLE_ALREADY_EXIST){
+        cout << "Error : Table Already Exist!";
+        return create_table;
+    }
+    //primary key index
+    if (pointer != nullptr && (string)pointer->val_ == "primary keys"){
+        pointer = pointer->child_;
+        vector<string> primary_keys;
+        while(pointer != nullptr && pointer->type_ == kNodeIdentifier){
+            string key_name = pointer->val_;
+            primary_keys.push_back(key_name);
+            pointer = pointer->next_;
+        }
+        IndexInfo *index_info = nullptr;
+        string primary_key_index_name = new_table_name + "_primary_key";
+        current_db->catalog_mgr_->CreateIndex(new_table_name, primary_key_index_name, primary_keys, nullptr, index_info);
+    }
+    //unique index
+    for (auto & iterator : new_table_column){
+        if (iterator->IsUnique()){
+            string unique_index_name = new_table_name + "_" + iterator->GetName() + "_unique";
+            vector<string> unique_column_name = { iterator->GetName() };
+            IndexInfo *index_info = nullptr;
+            current_db->catalog_mgr_->CreateIndex(new_table_name,unique_index_name,unique_column_name,nullptr,index_info);
+        }
+    }
+    cout << "Success!";
+    return create_table;
+//  return DB_FAILED;
 }
 
 dberr_t ExecuteEngine::ExecuteDropTable(pSyntaxNode ast, ExecuteContext *context) {
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteDropTable" << std::endl;
 #endif
-  return DB_FAILED;
+    dberr_t drop_table = current_db->catalog_mgr_->DropTable(ast->child_->val_);
+    if(drop_table == DB_TABLE_NOT_EXIST)
+        cout << "Error : Table Not Exist!";
+    return drop_table;
+    //return DB_FAILED;
 }
 
 dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *context) {

@@ -81,7 +81,7 @@ private:
 
 private:
   [[maybe_unused]] std::unordered_map<std::string, DBStorageEngine *> dbs_;  /** all opened databases */
-  [[maybe_unused]] std::string current_db_;  /** current database */
+  [[maybe_unused]] std::string current_db_;  /** current database name */
   [[maybe_unused]] DBStorageEngine *current_db;  /** real database */
 };
 
