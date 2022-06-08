@@ -1,4 +1,7 @@
 #include "catalog/catalog.h"
+//#include <iostream>
+//#include <fstream>
+
 
 void CatalogMeta::SerializeTo(char *buf) const {
   // ASSERT(false, "Not Implemented yet");
@@ -104,12 +107,130 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
     next_index_id_ = 0;
     catalog_meta_ = CatalogMeta::NewInstance(heap_);
   }
-  else{}
+  else{
+    ReadCatalog();
+  }
   //tag:catalog_meta和next_table_id和next_index_id的初始化问题
 }
 
 CatalogManager::~CatalogManager() {
+  WriteCatalog();
   delete heap_;
+}
+// store order: catalog_meta->next_table_id_->next_index_id_->table_size->
+// foreach(tables_id->table_meta_size->table_meta->index_size->
+// ->foreach(index_id->index_meta_size->index_meta))
+void CatalogManager::WriteCatalog(){
+  ofstream outfile;
+  outfile.open("catalogManager.dat",ios::app);
+  //catalog_meta
+  char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+  catalog_meta_->SerializeTo(catalog_meta);
+  outfile.write(catalog_meta,catalog_meta_->GetSerializedSize());
+  outfile<<endl;
+  //next_table_id_
+  outfile<<next_table_id_<<endl;
+  //next_index_id_
+  outfile<<next_index_id_<<endl;
+  //table_size
+  outfile<<table_names_.size()<<endl;
+  //for each table
+  for(auto i:table_names_){
+    //table_id
+    outfile<<i.second<<endl;
+    //table_meta_size
+    uint32_t table_meta_size = tables_.find(i.second)->second->GetTableMeta()->GetSerializedSize();
+    outfile<<table_meta_size<<endl;
+    //table_meta
+    char *table_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+    tables_.find(i.second)->second->GetTableMeta()->SerializeTo(table_meta);
+    outfile.write(table_meta,table_meta_size);
+    outfile<<endl;
+    //indexes:map<index_name,index_id>
+    auto indexes = index_names_.find(i.first)->second;
+    //index_size
+    outfile<<indexes.size()<<endl;
+    // for each index
+    for(auto index:indexes){
+      //index_id
+      outfile<<index.second<<endl;
+      //index_meta_size
+      uint32_t index_meta_size = indexes_.find(index.second)->second->GetIndexMeta()->GetSerializedSize();
+      outfile<<index_meta_size<<endl;
+      //index_meta
+      char *index_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+      indexes_.find(index.second)->second->GetIndexMeta()->SerializeTo(index_meta);
+      outfile.write(index_meta,index_meta_size);
+      outfile<<endl;
+    }
+
+  }
+  outfile.close();
+}
+// store order: catalog_meta->next_table_id_->next_index_id_->table_size->
+// foreach(tables_id->table_meta_size->table_meta->index_size->
+// ->foreach(index_id->index_meta_size->index_meta))
+void CatalogManager::ReadCatalog(){
+  ifstream infile;
+  infile.open("catalogManager.dat",ios::in);
+  //catalog_meta
+  char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+  infile.getline(catalog_meta,catalog_meta_->GetSerializedSize());
+  catalog_meta_ = CatalogMeta::DeserializeFrom(catalog_meta,heap_);
+  //next_table_id
+  char next_table_id[ACCESSX_MAX_TABLESIZE];
+  infile.getline(next_table_id,ACCESSX_MAX_TABLESIZE);
+  next_table_id_ = atoi(next_table_id);
+  //next_table_id
+  char next_index_id[ACCESSX_MAX_TABLESIZE];
+  infile.getline(next_index_id,ACCESSX_MAX_TABLESIZE);
+  next_index_id_ = atoi(next_index_id);
+  //table_size
+  char table_size_[ACCESSX_MAX_TABLESIZE];
+  infile.getline(table_size_,ACCESSX_MAX_TABLESIZE);
+  uint32_t table_size = atoi(table_size_);
+
+  for(uint32_t i=0;i<table_size;i++){
+    //table_id
+    char table_id_[ACCESSX_MAX_TABLESIZE];
+    infile.getline(table_id_,ACCESSX_MAX_TABLESIZE);
+    table_id_t table_id = atoi(table_id_);
+    //table_meta_size
+    char table_meta_size_[ACCESSX_MAX_TABLESIZE];
+    infile.getline(table_meta_size_,ACCESSX_MAX_TABLESIZE);
+    uint32_t table_meta_size = atoi(table_meta_size_);
+    //table_meta
+    char *table_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+    infile.getline(table_meta_,table_meta_size);
+    TableMetadata *table_meta;
+    TableMetadata::DeserializeFrom(table_meta_,table_meta,heap_);
+    //load table
+    LoadTable(table_id,INVALID_PAGE_ID,table_meta);
+    //index_size
+    char index_size_[ACCESSX_MAX_TABLESIZE];
+    infile.getline(index_size_,ACCESSX_MAX_TABLESIZE);
+    uint32_t index_size = atoi(index_size_);
+    for(uint32_t oi=0;oi<index_size;oi++){
+      //index_id
+      char index_id_[ACCESSX_MAX_TABLESIZE];
+      infile.getline(index_id_,ACCESSX_MAX_TABLESIZE);
+      index_id_t index_id = atoi(index_id_);
+      //index_meta_size
+      char index_meta_size_[ACCESSX_MAX_TABLESIZE];
+      infile.getline(index_meta_size_,ACCESSX_MAX_TABLESIZE);
+      uint32_t index_meta_size = atoi(index_meta_size_);
+      //index_meta
+      char *index_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+      infile.getline(index_meta_,index_meta_size);
+      IndexMetadata *index_meta;
+      IndexMetadata::DeserializeFrom(index_meta_,index_meta,heap_);
+      //load index
+      LoadIndex(index_id,INVALID_PAGE_ID,index_meta);
+    }
+
+  }
+
+  infile.close();
 }
 /**  [[maybe_unused]] CatalogMeta *catalog_meta_;
  * std::map<table_id_t, page_id_t> table_meta_pages_;
@@ -147,8 +268,6 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
   auto table_meta = TableMetadata::Create(table_id,table_name,
                                           page_id,schema,heap_);
   //table_info
-  //auto meta = TableInfo::Create(heap_);
-  //auto meta = table_info;
   table_info= TableInfo::Create(heap_);
   table_info->Init(table_meta,table);
 
@@ -220,7 +339,9 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   //update internal tracking
   indexes_.emplace(index_id,index_info);
   table_indexes.emplace(index_name,index_id);
-  catalog_meta_->index_meta_pages_.insert(pair<index_id_t, page_id_t>(index_id,page_id));
+  //page_id
+//  page_id_t page_id = index_info->GetIndexKeySchema()
+  catalog_meta_->index_meta_pages_.insert(pair<index_id_t, page_id_t>(index_id,INVALID_PAGE_ID));
   return DB_SUCCESS;
 }
 
@@ -292,15 +413,41 @@ dberr_t CatalogManager::FlushCatalogMetaPage() const {
   // ASSERT(false, "Not Implemented yet");
   return DB_FAILED;
 }
-
-dberr_t CatalogManager::LoadTable(const table_id_t table_id, const page_id_t page_id) {
+// map for tables
+//std::unordered_map<std::string, table_id_t> table_names_; //1
+//std::unordered_map<table_id_t, TableInfo *> tables_; //1
+// map for indexes: table_name->index_name->indexes
+//[[maybe_unused]] std::unordered_map<std::string, std::unordered_map<std::string, index_id_t>> index_names_; //1
+//[[maybe_unused]] std::unordered_map<index_id_t, IndexInfo *> indexes_; //1
+dberr_t CatalogManager::LoadTable(const table_id_t table_id, const page_id_t page_id, TableMetadata *table_meta) {
   // ASSERT(false, "Not Implemented yet");
-  return DB_FAILED;
+  //table_names
+  table_names_.emplace(table_meta->GetTableName(),table_id);
+  //create table heap
+  TableHeap *table = TableHeap::Create(buffer_pool_manager_,table_meta->GetSchema(), nullptr,
+                                       log_manager_,lock_manager_,heap_);
+  //TableInfo
+  TableInfo *table_info;
+  table_info= TableInfo::Create(heap_);
+  table_info->Init(table_meta,table);
+  tables_.emplace(table_id,table_info);
+  //track
+  index_names_.emplace(table_meta->GetTableName(), std::unordered_map<std::string, index_id_t>{});
+  return DB_SUCCESS;
 }
 
-dberr_t CatalogManager::LoadIndex(const index_id_t index_id, const page_id_t page_id) {
+dberr_t CatalogManager::LoadIndex(const index_id_t index_id, const page_id_t page_id, IndexMetadata *index_meta) {
   // ASSERT(false, "Not Implemented yet");
-  return DB_FAILED;
+  //index_names_
+  std::string table_name;
+  table_name = tables_.find(index_meta->GetTableId())->second->GetTableName();
+  index_names_.find(table_name)->second.emplace(index_meta->GetIndexName(),index_id);
+  //index info
+  IndexInfo *index_info = IndexInfo::Create(heap_);
+  index_info->Init(index_meta,tables_.find(index_meta->GetTableId())->second,buffer_pool_manager_);
+  indexes_.emplace(index_id,index_info);
+
+  return DB_SUCCESS;
 }
 
 dberr_t CatalogManager::GetTable(const table_id_t table_id, TableInfo *&table_info) {
