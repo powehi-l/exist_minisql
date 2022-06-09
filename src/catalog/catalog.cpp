@@ -1,7 +1,7 @@
 #include "catalog/catalog.h"
 //#include <iostream>
 //#include <fstream>
-
+#include<cstring>
 
 void CatalogMeta::SerializeTo(char *buf) const {
   // ASSERT(false, "Not Implemented yet");
@@ -122,7 +122,12 @@ CatalogManager::~CatalogManager() {
 // ->foreach(index_id->index_meta_size->index_meta))
 void CatalogManager::WriteCatalog(){
   ofstream outfile;
-  outfile.open("catalogManager.dat",ios::app);
+//  static string db_file_name = "catalog_test.db";
+  //db_file_name
+  std::string db_file_name = buffer_pool_manager_->GetDiskManager()->GetFileName();
+  db_file_name = db_file_name.substr(0,db_file_name.find_last_of('.'));
+  db_file_name +=".dat";
+  outfile.open(db_file_name,ios::app);
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
   catalog_meta_->SerializeTo(catalog_meta);
@@ -171,8 +176,12 @@ void CatalogManager::WriteCatalog(){
 // foreach(tables_id->table_meta_size->table_meta->index_size->
 // ->foreach(index_id->index_meta_size->index_meta))
 void CatalogManager::ReadCatalog(){
+  //db_file_name
+  std::string db_file_name = buffer_pool_manager_->GetDiskManager()->GetFileName();
+  db_file_name = db_file_name.substr(0,db_file_name.find_last_of('.'));
+  db_file_name +=".dat";
   ifstream infile;
-  infile.open("catalogManager.dat",ios::in);
+  infile.open(db_file_name,ios::in);
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
   infile.getline(catalog_meta,catalog_meta_->GetSerializedSize());

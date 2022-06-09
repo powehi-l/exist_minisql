@@ -73,6 +73,8 @@ public:
 
   static constexpr size_t BITMAP_SIZE = BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
 
+  inline std::string GetFileName() const { return file_name_; }
+
 private:
   /**
    * Helper function to get disk file size
