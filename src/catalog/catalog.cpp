@@ -220,7 +220,7 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   //update internal tracking
   indexes_.emplace(index_id,index_info);
   table_indexes.emplace(index_name,index_id);
-  catalog_meta_->index_meta_pages_.insert(pair<index_id_t, page_id_t>(index_id,page_id));
+//  catalog_meta_->index_meta_pages_.insert(pair<index_id_t, page_id_t>(index_id,page_id));
   return DB_SUCCESS;
 }
 

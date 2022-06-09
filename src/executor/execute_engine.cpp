@@ -240,6 +240,8 @@ dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteShowIndexes" << std::endl;
 #endif
+//  cout << "+-------+-------------+------------+-----------+"<<endl;
+//  cout << "| Table |"<< " Seq_in_index |" << " Column_name |" << " Index_type "
   return DB_FAILED;
 }
 
@@ -247,6 +249,22 @@ dberr_t ExecuteEngine::ExecuteCreateIndex(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteCreateIndex" << std::endl;
 #endif
+  if (!current_db) {
+    cout << "Error : No database selected";
+    return DB_FAILED;
+  }
+  auto pointer = ast->child_;
+  std::string new_index = pointer->val_;
+  pointer = pointer->next_;
+  std::string new_index_table = pointer->val_;
+  pointer = pointer->next_->child_;
+  std::vector<std::string> index_child;
+  std::vector<std::uint32_t> index_map;
+  while(pointer != nullptr && pointer->type_ == kNodeIdentifier) {
+    index_child.push_back(pointer->val_);
+
+    pointer = pointer->next_;
+  }
   return DB_FAILED;
 }
 
