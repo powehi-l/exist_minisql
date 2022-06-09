@@ -82,24 +82,30 @@ public:
 
   inline TableInfo *GetTableInfo() const { return table_info_; }
 
+  inline IndexMetadata *GetIndexMeta() const {return meta_data_;}
 private:
   explicit IndexInfo() : meta_data_{nullptr}, index_{nullptr}, table_info_{nullptr},
                          key_schema_{nullptr}, heap_(new SimpleMemHeap()) {}
 
   Index *CreateIndex(BufferPoolManager *buffer_pool_manager) {
-   // BufferPoolManager *newbuf=buffer_pool_manager;
-    // Index *index_t = new Index(meta_data_->index_id_,key_schema_);
-    // tag:undetermined
-//   //int
-//   switch(key_schema_->GetColumn(1)->GetType()){
-     //auto b_plustree_index = new BPlusTreeIndex<GenericKey<4>,RowId,GenericComparator<4>>(meta_data_->index_id_,key_schema_,buffer_pool_manager);
-//   }
 
-//    return b_plustree_index;
-   //buffer_pool_manager.
-   //Index *index = CreateIndex(buffer_pool_manager);
-    ASSERT(false, "Not Implemented yet.");
-    return nullptr;
+   Row *row;
+   uint32_t size;
+   Index *b_plustree_index = nullptr;
+   row = table_info_->GetTableHeap()->Begin(nullptr).operator->();
+   size = row->GetSerializedSize(key_schema_);
+   if(0<size&&size<4) b_plustree_index = new BPlusTreeIndex<GenericKey<4>,RowId,GenericComparator<4>>
+         (meta_data_->index_id_,key_schema_,buffer_pool_manager);
+   else if (size<8)  b_plustree_index = new BPlusTreeIndex<GenericKey<8>,RowId,GenericComparator<8>>
+         (meta_data_->index_id_,key_schema_,buffer_pool_manager);
+   else if (size<16) b_plustree_index = new BPlusTreeIndex<GenericKey<16>,RowId,GenericComparator<16>>
+         (meta_data_->index_id_,key_schema_,buffer_pool_manager);
+   else if (size<32) b_plustree_index = new BPlusTreeIndex<GenericKey<32>,RowId,GenericComparator<32>>
+         (meta_data_->index_id_,key_schema_,buffer_pool_manager);
+   else b_plustree_index = new BPlusTreeIndex<GenericKey<64>,RowId,GenericComparator<64>>
+         (meta_data_->index_id_,key_schema_,buffer_pool_manager);
+
+    return b_plustree_index;
   }
 
 private:

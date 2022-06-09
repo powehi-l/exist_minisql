@@ -94,18 +94,22 @@ public:
 private:
   dberr_t FlushCatalogMetaPage() const;
 
-  dberr_t LoadTable(const table_id_t table_id, const page_id_t page_id);
+  dberr_t LoadTable(const table_id_t table_id, const page_id_t page_id,  TableMetadata *table_meta);
 
-  dberr_t LoadIndex(const index_id_t index_id, const page_id_t page_id);
+  dberr_t LoadIndex(const index_id_t index_id, const page_id_t page_id,  IndexMetadata *index_meta);
 
   dberr_t GetTable(const table_id_t table_id, TableInfo *&table_info);
+
+  void WriteCatalog();
+
+  void ReadCatalog();
 
 private:
   [[maybe_unused]] BufferPoolManager *buffer_pool_manager_; //1
   [[maybe_unused]] LockManager *lock_manager_; //1
   [[maybe_unused]] LogManager *log_manager_; //1
   [[maybe_unused]] CatalogMeta *catalog_meta_;
-  [[maybe_unused]] std::atomic<table_id_t> next_table_id_; //1
+  [[maybe_unused]] std::atomic<index_id_t> next_table_id_; //1
   [[maybe_unused]] std::atomic<index_id_t> next_index_id_; //1
   // map for tables
   std::unordered_map<std::string, table_id_t> table_names_; //1

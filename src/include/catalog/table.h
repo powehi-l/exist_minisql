@@ -72,6 +72,8 @@ public:
   inline Schema *GetSchema() const { return table_meta_->schema_; }
 
   inline page_id_t GetRootPageId() const { return table_meta_->root_page_id_; }
+  //add
+  inline TableMetadata *GetTableMeta() const {return table_meta_;}
 
 private:
   explicit TableInfo() : heap_(new SimpleMemHeap()) {};
