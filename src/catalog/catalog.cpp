@@ -117,7 +117,7 @@ CatalogManager::~CatalogManager() {
   WriteCatalog();
   delete heap_;
 }
-// store order: catalog_meta->next_table_id_->next_index_id_->table_size->
+// store order: catalog_size->catalog_meta->next_table_id_->next_index_id_->table_size->
 // foreach(tables_id->table_meta_size->table_meta->index_size->
 // ->foreach(index_id->index_meta_size->index_meta))
 void CatalogManager::WriteCatalog(){
@@ -127,12 +127,18 @@ void CatalogManager::WriteCatalog(){
   std::string db_file_name = buffer_pool_manager_->GetDiskManager()->GetFileName();
   db_file_name = db_file_name.substr(0,db_file_name.find_last_of('.'));
   db_file_name +=".dat";
-  outfile.open(db_file_name,ios::app);
+  outfile.open(db_file_name);
+  //catalog_size
+  uint32_t catalog_size=catalog_meta_->GetSerializedSize();
+  outfile<<catalog_size<<endl;
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
   catalog_meta_->SerializeTo(catalog_meta);
   outfile.write(catalog_meta,catalog_meta_->GetSerializedSize());
   outfile<<endl;
+//  //flag
+//  uint32_t flag = 121;
+//  outfile<<flag<<endl;
   //next_table_id_
   outfile<<next_table_id_<<endl;
   //next_index_id_
@@ -172,23 +178,36 @@ void CatalogManager::WriteCatalog(){
   }
   outfile.close();
 }
-// store order: catalog_meta->next_table_id_->next_index_id_->table_size->
+// store order: catalog_size->catalog_meta->next_table_id_->next_index_id_->table_size->
 // foreach(tables_id->table_meta_size->table_meta->index_size->
 // ->foreach(index_id->index_meta_size->index_meta))
 void CatalogManager::ReadCatalog(){
   //MAX_FILE_SIZE
-  uint32_t MAX_FILE_SIZE=16 * 1024;
+  uint32_t MAX_FILE_SIZE=100;
   //db_file_name
   std::string db_file_name = buffer_pool_manager_->GetDiskManager()->GetFileName();
   db_file_name = db_file_name.substr(0,db_file_name.find_last_of('.'));
   db_file_name +=".dat";
-  ifstream infile;
-  infile.open(db_file_name,ios::in);
+  ifstream infile(db_file_name,ios::in|ios::binary);
+  if(!infile){
+    cout<<"ERROR"<<endl;
+  }
+//  infile.open(db_file_name,ios::in);
+  //catalog_size
+  char catalog_size_[MAX_FILE_SIZE];
+  uint32_t catalog_size=0;
+  infile.getline(catalog_size_,MAX_FILE_SIZE);
+  catalog_size = atoi(catalog_size_);
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
-  catalog_meta_ = CatalogMeta::NewInstance(heap_);
-  infile.getline(catalog_meta,catalog_meta_->GetSerializedSize());
+  infile.getline(catalog_meta,MAX_FILE_SIZE);
   catalog_meta_ = CatalogMeta::DeserializeFrom(catalog_meta,heap_);
+//  //flag
+//  char flag_[MAX_FILE_SIZE];
+//  uint32_t flag;
+//  infile.getline(flag_,MAX_FILE_SIZE);
+//  flag = atoi(flag_);
+//  cout<<"IT's FLAG:"<<flag<<endl;
   //next_table_id
   char next_table_id[MAX_FILE_SIZE];
   infile.getline(next_table_id,MAX_FILE_SIZE);
