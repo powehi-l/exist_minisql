@@ -239,8 +239,15 @@ dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteShowIndexes" << std::endl;
 #endif
+  if (!current_db) {
+    cout << "Error : No database selected";
+    return DB_FAILED;
+  }
+//  auto mgr = current_db->catalog_mgr_;
 //  cout << "+-------+-------------+------------+-----------+"<<endl;
-//  cout << "| Table |"<< " Seq_in_index |" << " Column_name |" << " Index_type "
+//  cout << "| Table |"<< " Seq_in_index |" << " Column_name |" << " Index_type |";
+//  std::vector<IndexInfo *>indexes;
+//  mgr->GetTableIndexes()
   return DB_FAILED;
 }
 
@@ -252,26 +259,43 @@ dberr_t ExecuteEngine::ExecuteCreateIndex(pSyntaxNode ast, ExecuteContext *conte
     cout << "Error : No database selected";
     return DB_FAILED;
   }
+  auto mgr = current_db->catalog_mgr_;
+
   auto pointer = ast->child_;
   std::string new_index = pointer->val_;
   pointer = pointer->next_;
   std::string new_index_table = pointer->val_;
+
+//  TableInfo *cur_table;
+//  mgr->GetTable(new_index_table, cur_table);
+//  Schema* table_schema = cur_table->GetSchema();
+//  MemHeap* cur_heap;
+//  mgr->GetHeap(cur_heap);
   pointer = pointer->next_->child_;
   std::vector<std::string> index_child;
-  std::vector<std::uint32_t> index_map;
   while(pointer != nullptr && pointer->type_ == kNodeIdentifier) {
     index_child.push_back(pointer->val_);
-
     pointer = pointer->next_;
   }
-  return DB_FAILED;
+  IndexInfo* index_info;
+  mgr->CreateIndex(new_index_table, new_index, index_child, nullptr, index_info);
+  return DB_SUCCESS;
 }
 
 dberr_t ExecuteEngine::ExecuteDropIndex(pSyntaxNode ast, ExecuteContext *context) {
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteDropIndex" << std::endl;
 #endif
-  return DB_FAILED;
+  if (!current_db) {
+    cout << "Error : No database selected";
+    return DB_FAILED;
+  }
+  auto mgr = current_db->catalog_mgr_;
+  auto pointer = ast->child_;
+  std::string drop_index = pointer->val_;
+
+  mgr->DropIndex(drop_index);
+  return DB_SUCCESS;
 }
 
 dberr_t ExecuteEngine::ExecuteSelect(pSyntaxNode ast, ExecuteContext *context) {

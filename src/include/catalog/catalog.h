@@ -89,7 +89,7 @@ public:
 
   dberr_t DropTable(const std::string &table_name);
 
-  dberr_t DropIndex(const std::string &table_name, const std::string &index_name);
+  dberr_t DropIndex(const std::string &index_name);
 
 private:
   dberr_t FlushCatalogMetaPage() const;

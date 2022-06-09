@@ -404,16 +404,20 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
   return DB_SUCCESS;
 }
 
-dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_name) {
-
-  if(table_names_.find(table_name)==table_names_.end())return DB_TABLE_NOT_EXIST;
-  auto indexes =index_names_.find(table_name)->second;
-  //index_id
-  auto index_id = indexes.find(index_name)->second;
-  //erase from indexes_
-  indexes_.erase(index_id);
-  //erase from index_names_
-  indexes.erase(index_name);
+dberr_t CatalogManager::DropIndex(const string &index_name) {
+  std::unordered_map<std::string, table_id_t>::iterator it = table_names_.begin();
+  std::unordered_map<std::string, table_id_t>::iterator it_end = table_names_.end();
+  while(it != it_end){
+    string table_name = it->first;
+    if(table_names_.find(table_name)==table_names_.end()) continue ;
+    auto indexes =index_names_.find(table_name)->second;
+    //index_id
+    auto index_id = indexes.find(index_name)->second;
+    //erase from indexes_
+    indexes_.erase(index_id);
+    //erase from index_names_
+    indexes.erase(index_name);
+  }
   return DB_SUCCESS;
 }
 
