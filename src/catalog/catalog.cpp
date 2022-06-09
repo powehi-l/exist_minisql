@@ -176,6 +176,8 @@ void CatalogManager::WriteCatalog(){
 // foreach(tables_id->table_meta_size->table_meta->index_size->
 // ->foreach(index_id->index_meta_size->index_meta))
 void CatalogManager::ReadCatalog(){
+  //MAX_FILE_SIZE
+  uint32_t MAX_FILE_SIZE=16 * 1024;
   //db_file_name
   std::string db_file_name = buffer_pool_manager_->GetDiskManager()->GetFileName();
   db_file_name = db_file_name.substr(0,db_file_name.find_last_of('.'));
@@ -187,26 +189,26 @@ void CatalogManager::ReadCatalog(){
   infile.getline(catalog_meta,catalog_meta_->GetSerializedSize());
   catalog_meta_ = CatalogMeta::DeserializeFrom(catalog_meta,heap_);
   //next_table_id
-  char next_table_id[ACCESSX_MAX_TABLESIZE];
-  infile.getline(next_table_id,ACCESSX_MAX_TABLESIZE);
+  char next_table_id[MAX_FILE_SIZE];
+  infile.getline(next_table_id,MAX_FILE_SIZE);
   next_table_id_ = atoi(next_table_id);
   //next_table_id
-  char next_index_id[ACCESSX_MAX_TABLESIZE];
-  infile.getline(next_index_id,ACCESSX_MAX_TABLESIZE);
+  char next_index_id[MAX_FILE_SIZE];
+  infile.getline(next_index_id,MAX_FILE_SIZE);
   next_index_id_ = atoi(next_index_id);
   //table_size
-  char table_size_[ACCESSX_MAX_TABLESIZE];
-  infile.getline(table_size_,ACCESSX_MAX_TABLESIZE);
+  char table_size_[MAX_FILE_SIZE];
+  infile.getline(table_size_,MAX_FILE_SIZE);
   uint32_t table_size = atoi(table_size_);
 
   for(uint32_t i=0;i<table_size;i++){
     //table_id
-    char table_id_[ACCESSX_MAX_TABLESIZE];
-    infile.getline(table_id_,ACCESSX_MAX_TABLESIZE);
+    char table_id_[MAX_FILE_SIZE];
+    infile.getline(table_id_,MAX_FILE_SIZE);
     table_id_t table_id = atoi(table_id_);
     //table_meta_size
-    char table_meta_size_[ACCESSX_MAX_TABLESIZE];
-    infile.getline(table_meta_size_,ACCESSX_MAX_TABLESIZE);
+    char table_meta_size_[MAX_FILE_SIZE];
+    infile.getline(table_meta_size_,MAX_FILE_SIZE);
     uint32_t table_meta_size = atoi(table_meta_size_);
     //table_meta
     char *table_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
@@ -216,17 +218,17 @@ void CatalogManager::ReadCatalog(){
     //load table
     LoadTable(table_id,INVALID_PAGE_ID,table_meta);
     //index_size
-    char index_size_[ACCESSX_MAX_TABLESIZE];
-    infile.getline(index_size_,ACCESSX_MAX_TABLESIZE);
+    char index_size_[MAX_FILE_SIZE];
+    infile.getline(index_size_,MAX_FILE_SIZE);
     uint32_t index_size = atoi(index_size_);
     for(uint32_t oi=0;oi<index_size;oi++){
       //index_id
-      char index_id_[ACCESSX_MAX_TABLESIZE];
-      infile.getline(index_id_,ACCESSX_MAX_TABLESIZE);
+      char index_id_[MAX_FILE_SIZE];
+      infile.getline(index_id_,MAX_FILE_SIZE);
       index_id_t index_id = atoi(index_id_);
       //index_meta_size
-      char index_meta_size_[ACCESSX_MAX_TABLESIZE];
-      infile.getline(index_meta_size_,ACCESSX_MAX_TABLESIZE);
+      char index_meta_size_[MAX_FILE_SIZE];
+      infile.getline(index_meta_size_,MAX_FILE_SIZE);
       uint32_t index_meta_size = atoi(index_meta_size_);
       //index_meta
       char *index_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
