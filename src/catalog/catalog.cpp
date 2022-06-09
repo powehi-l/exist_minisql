@@ -186,6 +186,7 @@ void CatalogManager::ReadCatalog(){
   infile.open(db_file_name,ios::in);
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
+  catalog_meta_ = CatalogMeta::NewInstance(heap_);
   infile.getline(catalog_meta,catalog_meta_->GetSerializedSize());
   catalog_meta_ = CatalogMeta::DeserializeFrom(catalog_meta,heap_);
   //next_table_id
