@@ -47,7 +47,7 @@ public:
 public:
   DiskManager *disk_mgr_;
   BufferPoolManager *bpm_;
-  CatalogManager catalog_mgr_;
+  CatalogManager *catalog_mgr_;
   std::string db_file_name_;
   bool init_;
 };
