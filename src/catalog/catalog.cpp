@@ -414,7 +414,6 @@ dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_
   return DB_SUCCESS;
 }
 
-
 dberr_t CatalogManager::FlushCatalogMetaPage() const {
   // ASSERT(false, "Not Implemented yet");
   return DB_FAILED;
