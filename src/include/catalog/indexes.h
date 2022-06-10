@@ -36,7 +36,8 @@ private:
   IndexMetadata() = delete;
 
   explicit IndexMetadata(const index_id_t index_id, const std::string &index_name,
-                         const table_id_t table_id, const std::vector<uint32_t> &key_map) {}
+                         const table_id_t table_id, const std::vector<uint32_t> &key_map):
+                          index_id_(index_id), index_name_(index_name), table_id_(table_id), key_map_(key_map){}
 
 private:
   static constexpr uint32_t INDEX_METADATA_MAGIC_NUM = 344528;
@@ -89,11 +90,21 @@ private:
 
   Index *CreateIndex(BufferPoolManager *buffer_pool_manager) {
 
-   Row *row;
-   uint32_t size;
+//   Row *row;
+   uint32_t size = 0;
+   Schema* schema = table_info_->GetSchema();
+   for(uint32_t i = 0; i < schema->GetColumnCount(); i++){
+     TypeId type_id = schema->GetColumns()[i]->GetType();
+     if(type_id == kTypeChar){
+       size += schema->GetColumns()[i]->GetLength();
+     }
+     else{
+       size += Type::GetTypeSize(type_id);
+     }
+   }
    Index *b_plustree_index = nullptr;
-   row = table_info_->GetTableHeap()->Begin(nullptr).operator->();
-   size = row->GetSerializedSize(key_schema_);
+//   row = table_info_->GetTableHeap()->Begin(nullptr).operator->();
+//   size = row->GetSerializedSize(key_schema_);
    if(0<size&&size<4) b_plustree_index = new BPlusTreeIndex<GenericKey<4>,RowId,GenericComparator<4>>
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
    else if (size<8)  b_plustree_index = new BPlusTreeIndex<GenericKey<8>,RowId,GenericComparator<8>>
@@ -104,7 +115,10 @@ private:
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
    else b_plustree_index = new BPlusTreeIndex<GenericKey<64>,RowId,GenericComparator<64>>
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
-   
+
+   for(auto it = table_info_->GetTableHeap()->Begin(nullptr); it != table_info_->GetTableHeap()->End(); it++){
+     b_plustree_index->InsertEntry(*it, it->GetRowId(), nullptr);
+   }
     return b_plustree_index;
   }
 
