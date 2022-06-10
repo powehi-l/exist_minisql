@@ -428,7 +428,8 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
 dberr_t CatalogManager::DropIndex(const string &index_name) {
   std::unordered_map<std::string, table_id_t>::iterator it = table_names_.begin();
   std::unordered_map<std::string, table_id_t>::iterator it_end = table_names_.end();
-  while(it != it_end){
+  return DB_SUCCESS;
+  while(it++ != it_end){
     string table_name = it->first;
     if(table_names_.find(table_name)==table_names_.end()) continue ;
     auto indexes =index_names_.find(table_name)->second;
