@@ -918,37 +918,37 @@ dberr_t ExecuteEngine::ExecuteInsert(pSyntaxNode ast, ExecuteContext *context) {
         cout << "Error : Insert failed! Affects 0 record!";
         return DB_FAILED;
     }
-//    vector<IndexInfo *> indexes;
-//    current_db->catalog_mgr_->GetTableIndexes(table_name, indexes);
-//    for (auto iter = indexes.begin(); iter != indexes.end() ; iter++) {
-//        IndexSchema* index_schema = (*iter)->GetIndexKeySchema();
-//        vector<Field> index_fields;
-//        for(auto it:index_schema->GetColumns()){
-//            index_id_t tmp;
-//            if(table_info->GetSchema()->GetColumnIndex(it->GetName(),tmp)==DB_SUCCESS){
-//                index_fields.push_back(new_fields[tmp]);
-//            }
-//        }
-//        Row index_row(index_fields);
-//        dberr_t IsInsert=(*iter)->GetIndex()->InsertEntry(index_row,new_row.GetRowId(),nullptr);
-//        if(IsInsert == DB_FAILED){
-//            cout<<"Insert Failed, Affects 0 Record!"<<endl;
-//            for(auto q=indexes.begin();q!=iter;q++){
-//                IndexSchema* index_schema_already = (*q)->GetIndexKeySchema();
-//                vector<Field> index_fields_already;
-//                for(auto it:index_schema_already->GetColumns()){
-//                    index_id_t tmp_already;
-//                    if(table_info->GetSchema()->GetColumnIndex(it->GetName(),tmp_already)==DB_SUCCESS){
-//                        index_fields_already.push_back(new_fields[tmp_already]);
-//                    }
-//                }
-//                Row index_row_already(index_fields_already);
-//                (*q)->GetIndex()->RemoveEntry(index_row_already,new_row.GetRowId(),nullptr);
-//            }
-//            table_heap->MarkDelete(new_row.GetRowId(),nullptr);
-//            return IsInsert;
-//        }
-//    }
+    vector<IndexInfo *> indexes;
+    current_db->catalog_mgr_->GetTableIndexes(table_name, indexes);
+    for (auto iter = indexes.begin(); iter != indexes.end() ; iter++) {
+        IndexSchema* index_schema = (*iter)->GetIndexKeySchema();
+        vector<Field> index_fields;
+        for(auto it:index_schema->GetColumns()){
+            index_id_t tmp;
+            if(table_info->GetSchema()->GetColumnIndex(it->GetName(),tmp)==DB_SUCCESS){
+                index_fields.push_back(new_fields[tmp]);
+            }
+        }
+        Row index_row(index_fields);
+        dberr_t IsInsert=(*iter)->GetIndex()->InsertEntry(index_row,new_row.GetRowId(),nullptr);
+        if(IsInsert == DB_FAILED){
+            cout<<"Insert Failed, Affects 0 Record!"<<endl;
+            for(auto q=indexes.begin();q!=iter;q++){
+                IndexSchema* index_schema_already = (*q)->GetIndexKeySchema();
+                vector<Field> index_fields_already;
+                for(auto it:index_schema_already->GetColumns()){
+                    index_id_t tmp_already;
+                    if(table_info->GetSchema()->GetColumnIndex(it->GetName(),tmp_already)==DB_SUCCESS){
+                        index_fields_already.push_back(new_fields[tmp_already]);
+                    }
+                }
+                Row index_row_already(index_fields_already);
+                (*q)->GetIndex()->RemoveEntry(index_row_already,new_row.GetRowId(),nullptr);
+            }
+            table_heap->MarkDelete(new_row.GetRowId(),nullptr);
+            return IsInsert;
+        }
+    }
     cout<<"Insert Success, Affects 1 Record!"<<endl;
     return DB_SUCCESS;
 }
