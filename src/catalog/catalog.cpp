@@ -232,7 +232,7 @@ void CatalogManager::ReadCatalog(){
     uint32_t table_meta_size = atoi(table_meta_size_);
     //table_meta
     char *table_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
-    infile.getline(table_meta_,table_meta_size);
+    infile.getline(table_meta_,table_meta_size+1);
     TableMetadata *table_meta;
     TableMetadata::DeserializeFrom(table_meta_,table_meta,heap_);
     //load table
@@ -252,7 +252,7 @@ void CatalogManager::ReadCatalog(){
       uint32_t index_meta_size = atoi(index_meta_size_);
       //index_meta
       char *index_meta_ = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
-      infile.getline(index_meta_,index_meta_size);
+      infile.getline(index_meta_,index_meta_size+1);
       IndexMetadata *index_meta;
       IndexMetadata::DeserializeFrom(index_meta_,index_meta,heap_);
       //load index
