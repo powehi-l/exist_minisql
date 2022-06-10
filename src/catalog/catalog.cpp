@@ -195,9 +195,9 @@ void CatalogManager::ReadCatalog(){
 //  infile.open(db_file_name,ios::in);
   //catalog_size
   char catalog_size_[MAX_FILE_SIZE];
-  uint32_t catalog_size=0;
+//  uint32_t catalog_size = 0;
   infile.getline(catalog_size_,MAX_FILE_SIZE);
-  catalog_size = atoi(catalog_size_);
+//  uint32_t catalog_size = atoi(catalog_size_);
   //catalog_meta
   char *catalog_meta = reinterpret_cast<char *>(heap_->Allocate(PAGE_SIZE));
   infile.getline(catalog_meta,MAX_FILE_SIZE);
@@ -353,10 +353,12 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   std::vector<uint32_t> key_map;
   for(auto i=index_keys.begin();i!=index_keys.end();++i){
     oi=0;
-    for(auto it = columns.begin();it!=columns.end();++it){
+    std::vector<Column*>::iterator it;
+    for(it = columns.begin();it!=columns.end();++it){
       if((*it)->GetName()==(*i))break;
       oi++;
     }
+    if(it == columns.end()) return DB_COLUMN_NAME_NOT_EXIST;
     key_map.push_back(oi);
   }
 

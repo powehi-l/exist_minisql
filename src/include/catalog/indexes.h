@@ -104,7 +104,7 @@ private:
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
    else b_plustree_index = new BPlusTreeIndex<GenericKey<64>,RowId,GenericComparator<64>>
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
-
+   
     return b_plustree_index;
   }
 
