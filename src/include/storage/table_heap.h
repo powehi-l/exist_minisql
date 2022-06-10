@@ -116,7 +116,10 @@ private:
             first_page_id_(first_page_id),
             schema_(schema),
             log_manager_(log_manager),
-            lock_manager_(lock_manager) {}
+            lock_manager_(lock_manager) {
+    TablePage *first_page = (TablePage *)buffer_pool_manager_->FetchPage(first_page_id_);
+    first_page->Init(first_page_id_,INVALID_PAGE_ID,log_manager, nullptr);
+  }
 
 private:
   BufferPoolManager *buffer_pool_manager_;
