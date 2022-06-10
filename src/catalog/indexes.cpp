@@ -35,7 +35,7 @@ uint32_t IndexMetadata::SerializeTo(char *buf) const {
   newbuf +=sizeof(uint32_t);
   for(auto i=key_map_.begin();i!=key_map_.end();++i){
     //tag:undetermined
-    memcpy(newbuf,&i,sizeof(uint32_t));
+    memcpy(newbuf,&(*i),sizeof(uint32_t));
     newbuf+=sizeof(uint32_t);
   }
 

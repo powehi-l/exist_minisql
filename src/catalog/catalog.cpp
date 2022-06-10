@@ -457,7 +457,7 @@ dberr_t CatalogManager::LoadTable(const table_id_t table_id, const page_id_t pag
   //table_names
   table_names_.emplace(table_meta->GetTableName(),table_id);
   //create table heap
-  TableHeap *table = TableHeap::Create(buffer_pool_manager_,table_meta->GetSchema(), nullptr,
+  TableHeap *table = TableHeap::Create(buffer_pool_manager_,table_meta->GetFirstPageId(),table_meta->GetSchema(),
                                        log_manager_,lock_manager_,heap_);
   //TableInfo
   TableInfo *table_info;

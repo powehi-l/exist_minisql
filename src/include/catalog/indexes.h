@@ -116,7 +116,7 @@ private:
    else b_plustree_index = new BPlusTreeIndex<GenericKey<64>,RowId,GenericComparator<64>>
          (meta_data_->index_id_,key_schema_,buffer_pool_manager);
 
-   for(auto it = table_info_->GetTableHeap()->Begin(nullptr); it != table_info_->GetTableHeap()->End(); it++){
+   for(auto it = table_info_->GetTableHeap()->Begin(nullptr);it != table_info_->GetTableHeap()->End(); it++){
      b_plustree_index->InsertEntry(*it, it->GetRowId(), nullptr);
    }
     return b_plustree_index;
